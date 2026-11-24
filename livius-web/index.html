@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Livius Chat</title>
+<meta name="theme-color" content="#1e1f22">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #1e1f22; touch-action: none; }
+  canvas#livius { position: fixed; inset: 0; width: 100%; height: 100%; outline: none; }
+  #caricamento { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    color: #dbdee1; font: 16px system-ui, sans-serif; }
+  #caricamento img { width: 96px; height: 96px; border-radius: 22px; }
+  #installa { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 5; display: none; align-items: center; gap: 10px;
+    background: #2b2d31; color: #dbdee1; border-radius: 12px; padding: 6px 8px 6px 14px; font: 14px system-ui, sans-serif; box-shadow: 0 4px 16px rgba(0,0,0,.35); }
+  #installa button { border: 0; border-radius: 8px; padding: 6px 12px; background: #e07a3f; color: #fff; font: 600 14px system-ui, sans-serif; cursor: pointer; }
+  #installa span { cursor: pointer; padding: 0 6px; color: #949ba4; }
+  #ios { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 5; display: none; max-width: 92%;
+    background: #2b2d31; color: #dbdee1; border-radius: 12px; padding: 10px 14px; font: 14px system-ui, sans-serif; box-shadow: 0 4px 16px rgba(0,0,0,.35); }
+  #ios b { color: #e07a3f; }
+</style>
+</head>
+<body>
+<canvas id="livius"></canvas>
+<div id="caricamento"><img src="icon-192.png" alt=""><div>Livius Chat si sta aprendo…</div></div>
+<div id="installa">Livius Chat come app <button id="installa-ok">Installa</button><span id="installa-x">✕</span></div>
+<div id="ios">Per installarla: tocca <b>Condividi</b> e poi <b>Aggiungi alla schermata Home</b>. <span id="ios-x" style="margin-left:8px;cursor:pointer">✕</span></div>
+<script>
+  // Pulsante "Installa": Chrome, Edge e Android lo offrono quando la pagina è installabile.
+  let prompt = null;
+  const btn = document.getElementById("installa");
+  // In alto al centro, piccolo, e si può chiudere (resta chiuso per una settimana).
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); prompt = e;
+    if (Date.now() - Number(localStorage.getItem("installa-no") || 0) > 7 * 864e5) btn.style.display = "flex";
+  });
+  document.getElementById("installa-ok").addEventListener("click", async () => { if (!prompt) return; prompt.prompt(); await prompt.userChoice; prompt = null; btn.style.display = "none"; });
+  document.getElementById("installa-x").addEventListener("click", () => { localStorage.setItem("installa-no", String(Date.now())); btn.style.display = "none"; });
+  window.addEventListener("appinstalled", () => { btn.style.display = "none"; });
+  // iPhone e iPad: Safari non ha il pulsante, si spiega come fare.
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone && !localStorage.getItem("ios-ok")) {
+    document.getElementById("ios").style.display = "block";
+  }
+  document.getElementById("ios-x").addEventListener("click", () => { localStorage.setItem("ios-ok", "1"); document.getElementById("ios").style.display = "none"; });
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+<script type="module">
+  import init from "./livius_web.js";
+  init();
+</script>
+</body>
+</html>
